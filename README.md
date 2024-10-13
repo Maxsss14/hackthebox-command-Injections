@@ -145,3 +145,6 @@ To prevent command injection vulnerabilities, consider the following measures:
     Avoid using system commands in web applications.
     Implement strict input validation and sanitization.
     Configure the web server properly to minimize the risk of such attacks.
+
+If you need my help with anything, feel free to ask: fursachi14@gmail.com
+
