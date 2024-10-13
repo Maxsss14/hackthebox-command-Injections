@@ -11,7 +11,9 @@
 In this skill assessment for the HTB Bug Bounty Hunter Certification, you are tasked with conducting a penetration test for a client. During your assessment, you discover a file manager web application. Given that file managers often execute system commands, this presents an opportunity to investigate potential command injection vulnerabilities.
 
 Your objective is to utilize the techniques covered in this module to identify and exploit a command injection vulnerability while bypassing any existing filters.
-![q4](https://github.com/user-attachments/assets/4630e27c-bddb-4e8b-a93b-47fd5b1ac5a8)
+![1_DHXr_KJLQETpFGV1tY30fw](https://github.com/user-attachments/assets/2c34df20-2c87-44d7-9132-afa86ab1c857)
+
+
 
 ### Target Information
 
