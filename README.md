@@ -1,123 +1,82 @@
-# Hack The Box: Command Injections
+# Comprehensive Write-Up for the HTB Bug Bounty Hunter Certification Skill Assessments
 
-**Detailed guide for the Hack The Box Bug Bounty Command Injections skill assessments. This write-up focuses on identifying and exploiting command injection vulnerabilities.**
+## Introduction
 
+This document provides a thorough analysis of the skill assessments linked to the HTB Bug Bounty Hunter Certification. Each assessment is approached as a distinct penetration test, focusing on a specific vulnerability and offering recommendations for remediation.
 
+### Command Injection Skill Assessment
 
-## Command Injection Skill Assessment
+**Scenario Overview:**
 
-### Scenario Overview
+You have been hired to conduct a penetration test for a company, and during your assessment, you encounter a file management web application. Given that file managers often execute system-level commands, it is essential to investigate potential command injection vulnerabilities.
 
-In this skill assessment for the HTB Bug Bounty Hunter Certification, you are tasked with conducting a penetration test for a client. During your assessment, you discover a file manager web application. Given that file managers often execute system commands, this presents an opportunity to investigate potential command injection vulnerabilities.
+Utilize the various techniques introduced in this module to identify a command injection vulnerability, exploit it, and bypass any security filters present.
 
-Your objective is to utilize the techniques covered in this module to identify and exploit a command injection vulnerability while bypassing any existing filters.
-![1_DHXr_KJLQETpFGV1tY30fw](https://github.com/user-attachments/assets/2c34df20-2c87-44d7-9132-afa86ab1c857)
+**Target of Interest:**
 
+"94.237.xx.xxx:xxxx"
 
+### Reconnaissance Analysis
 
-### Target Information
+Initially, it's crucial to engage with the application in the same manner as a typical user to comprehend its functionalities.
 
-- **Scoped Target**: `94.237.xx.xxx:xxxx`
+The file manager web application appears to interface with the operating system, enabling us to view files hosted on the server.
 
-### Reconnaissance
+![q4](https://github.com/user-attachments/assets/4630e27c-bddb-4e8b-a93b-47fd5b1ac5a8)
 
-To begin, we will interact with the application as a regular user to understand its functionalities. The file manager allows us to see files stored on the server at the operating system level.
+Upon clicking on the **tmp** folder, I observed that the URL parameter reflects as `to=tmp`.  
+![1_sP63QruxRhfbTcO9YVNyXA](https://github.com/user-attachments/assets/59ef09be-f7b8-4d57-ae3a-62aecaf0b1a9)
 
-While examining the application, I noticed the following:
+This behavior is also noted when accessing a .txt file, where the parameter appears as `to=&view=the .txt file`.  
+![1_J-RQt28WxAwk5Wa5-wT5CQ](https://github.com/user-attachments/assets/380f5e5b-af7d-4f72-b085-d875a704f593)
 
-- When I clicked on the "tmp" folder, the URL updated to reflect the parameter `to=tmp`.
-- Accessing a `.txt` file similarly updated the URL to `to=&view=the.txt`.
+The application features several action buttons for files and folders, including a "copy to" option.  
+![1_gjQ3JZfX-MGnxSe0qEu3pg](https://github.com/user-attachments/assets/7d2d989d-c1dc-40cd-80d5-59db260dfaf7)
 
-The application features several action buttons for each file and folder, including a "copy to" button, which permits users to copy files to different directories.
+This functionality enables users to copy files to other directories.  
+![1_r5KkM70_NqJH2h7LhVrpQA](https://github.com/user-attachments/assets/daeecf1b-bf80-4078-a102-71ee641a2e89)
 
-For example, the following request moves a file:
+The HTTP request structure for moving a file to a directory is as follows:  
+**Link:** "http://94.237.49.166:46423/index.php?to=tmp&from=51459716.txt&finish=1&move=1"  
+![1_rD7m-OmRqTgTcoTCIt09pw](https://github.com/user-attachments/assets/23ec78ec-92da-4abb-9928-638f6f414487)
 
-```
-http://94.237.49.166:46423/index.php?to=tmp&from=51459716.txt&finish=1&move=1
-```
+Note that once the file is moved from one directory, it can’t be re-performed in the same action as the file has been moved.  
+![1_qVTBRRDDLA6BJDUSu86tSw](https://github.com/user-attachments/assets/46c09bbc-c89c-4a1c-b950-2270bbf6c6a8)
 
-It’s important to note that once a file is moved, you cannot perform the action again on the same file.
+You can also see advanced search next to the normal search bar.  
+![1_68X6VX6zfQBHoae9zy5QmA](https://github.com/user-attachments/assets/80acbefa-01e8-416c-9453-33fc2085bfd4)
 
-Additionally, there is an advanced search option next to the standard search bar, which might be of interest.
+![1_ZffheKduXtvwx1x9oT7tWQ](https://github.com/user-attachments/assets/0983529a-c562-45ef-bbb9-6791d4f1230d)
 
 ### Attack Vector
 
-Having tested the various functionalities, I will focus on a few specific areas of the application and the corresponding URL parameters to see if command injection can be performed in the file-moving functionality.
+Now we have tested all functional areas, we want to target a few function areas and URL parameters to see if we can perform command injection like the moving file function area.
 
-We need to investigate the "to" parameter in the URL for potential command injection.
+Below is the initial move of a file to a directory on the UI and the HTTP request.  
+![1__9sjeuekvcmy2ap3PO5x6g](https://github.com/user-attachments/assets/94daae8f-ce9a-482b-9b92-6fbec09ea931)
 
-### Command Injection Techniques
+![1_ncY80ky1RSacQ08pZvG0Ig](https://github.com/user-attachments/assets/2d8cddeb-4bb1-4720-a061-6bac9c63af17)
 
-To inject additional commands into the intended operation, various operators can be utilized. 
+Below is the repeated action on the moving of the same file to the same directory on the UI and the HTTP request.  
+![1_tLiphvDYbtwb8ctXiJ4mcg](https://github.com/user-attachments/assets/cb117f97-8f43-4e5c-9bf3-dc0b14d97c06)
 
-When I attempted to inject commands using the `to` parameter, such as:
+![1_Do-CEGUOvPj5x7fATCfogw](https://github.com/user-attachments/assets/3c20054b-0170-4ff5-a154-528f5eb36ddf)
 
-```bash
-; whoami; ls
-```
+We want to detect the command injection in the parameter within the URL.
 
-I received an error stating, “malicious request denied.” This indicates that certain basic commands are filtered.
+### Command Injection Methods
 
-Next, I identified the filtering mechanisms that may include restrictions on spaces, blacklisted characters, blocked commands, command obfuscation techniques, and Web Application Firewall (WAF) filters.
+To inject an additional command into the intended one, we may use any of the following operators:  
+![1_6RqtiecXLibfJG7bNnbggQ](https://github.com/user-attachments/assets/8e5a7ced-3d20-453b-9c21-9175d2e7fe26)
 
-To circumvent these filters, I will apply advanced command obfuscation techniques, including Base64 encoding. For example, I can use:
+As I am trying to see if the “to” parameter is by injecting command injection and see whoami and ls. The error message updated to “malicious request denied”.  
+![1_AugDlPIamC-dViU1mxSZog](https://github.com/user-attachments/assets/1e147d29-cfdb-400e-9811-e61a98f5b7f0)
 
-```bash
-bash<<<$(base64 -d<<<"base64_encoded_payload")
-```
+![1_6lfoA-aykZLJy4O0FylvfA](https://github.com/user-attachments/assets/82451731-5b66-4185-b145-1d53d404ac7b)
 
-After executing `whoami`, the output reveals that the current user is `www-data`. I will further test with `ls -la` to list the files in the directory.
+This shows that basic commands are filtered. In this case, we will need to identify possible filters, which can include space, blacklisted characters, blacklisted commands, command obfuscation, and WAF filters.
 
-### Exploitation
-
-Now that I have identified the attack vector and recognized the filtering mechanisms, it’s time to proceed with the exploit. My goal is to check the contents of the root directory.
-
-I discover files such as `config.php`, `files`, and `index.php`, but I cannot find the target file named `flag.txt`. Therefore, I will attempt to move the `/flag.txt` file to the `tmp` directory to inspect its contents.
-
-To do this, I will use the following payload:
+I am going to utilize advanced command obfuscation with base64 encoding.
 
 ```bash
-mv ${PATH:0:1}flag.txt ${PATH:0:1}var${PATH:0:1}www${PATH:0:1}html${PATH:0:1}files${PATH:0:1}tmp
-```
-
-Encoded, this becomes:
-
-```bash
-bXYgJHtQQVRIOjA6MX1mbGFnLnR4dCAke1BBVEg6MDoxfXZhciR7UEFUSDowOjF9d3d3JHtQQVRIOjA6MX1odG1sJHtQQVRIOjA6MX1maWxlcyR7UEFUSDowOjF9dG1w
-```
-
-Executing the command to move the file reveals that while the `flag.txt` can indeed be relocated to the `tmp` folder, I lack the necessary permissions to complete the action. However, this indicates that we have discovered the location of the `flag.txt` file, even if we cannot see it directly.
-
-Now, to retrieve the contents of the `flag.txt`, I will construct a payload that incorporates Base64 encoding, bypassing any blacklisted characters, and using backslashes to overcome single-character filters:
-
-```bash
-%26c\a\t%09${PATH:0:1}flag.txt
-```
-
-Here, the `&cat` command is combined with a horizontal tab to access the flag file.
-
-### Consequences of Command Injection
-
-Command injection vulnerabilities are among the most severe types of security flaws. They enable an attacker to execute operating system-level commands directly on the back-end server, potentially leading to a complete network compromise. If a web application processes user-controlled input to execute system commands, it may be possible to inject malicious payloads that disrupt the intended command execution.
-
-### Remediation Strategies
-
-With a comprehensive understanding of how command injection vulnerabilities manifest and how certain mitigation techniques, such as character and command filtering, can be bypassed, we can outline several preventative measures:
-
-- **Avoid Executing System Commands**: Wherever possible, refrain from executing OS-level commands based on user input.
-- **Input Validation**: Ensure thorough validation of all user inputs to prevent unexpected command execution.
-- **Input Sanitization**: Implement sanitization measures to clean user inputs before processing.
-- **Secure Server Configuration**: Properly configure your web server to limit the execution of potentially harmful commands.
-
-By following these guidelines, developers and security professionals can significantly reduce the risk of command injection vulnerabilities in their web applications.
-
----
-```
-
-### Key Formatting Elements:
-- **Headings**: Clear headings for each section to improve navigation.
-- **Code Blocks**: Utilized triple backticks to format commands and URLs for clarity.
-- **Bullet Points**: Used lists to organize information in a digestible format.
-- **Bold Text**: Highlighted important points for emphasis.
-
-This structure will enhance the readability of your GitHub write-up while presenting the technical details clearly and professionally.
+bash<<<$(base64 -d<<<"base64 encoded OS payload")
