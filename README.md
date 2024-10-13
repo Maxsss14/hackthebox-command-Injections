@@ -14,7 +14,7 @@ First, you want to interact with the application as a normal user to understand 
 
 The file manager web application appears to be connected to the OS level, allowing us to view files hosted on the server.
 
-(https://github.com/user-attachments/assets/4630e27c-bddb-4e8b-a93b-47fd5b1ac5a8)
+![1_J-RQt28WxAwk5Wa5-wT5CQ](https://github.com/user-attachments/assets/4630e27c-bddb-4e8b-a93b-47fd5b1ac5a8)
 
 When clicking the tmp folder, the parameter in the URL changes to to=tmp.
 
