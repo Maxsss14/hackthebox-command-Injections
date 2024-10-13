@@ -22,7 +22,6 @@ Initially, it's crucial to engage with the application in the same manner as a t
 
 The file manager web application appears to interface with the operating system, enabling us to view files hosted on the server.
 
-![q4](https://github.com/user-attachments/assets/4630e27c-bddb-4e8b-a93b-47fd5b1ac5a8)
 
 Upon clicking on the **tmp** folder, I observed that the URL parameter reflects as `to=tmp`.  
 ![1_sP63QruxRhfbTcO9YVNyXA](https://github.com/user-attachments/assets/59ef09be-f7b8-4d57-ae3a-62aecaf0b1a9)
